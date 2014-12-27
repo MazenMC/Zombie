@@ -4,9 +4,11 @@ import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.core.DockerClientBuilder;
+import com.github.dockerjava.jaxrs.DockerCmdExecFactoryImpl;
 import com.mongodb.ServerAddress;
 import com.rabbitmq.client.Address;
 import io.minestack.doublechest.DoubleChest;
+import io.minestack.doublechest.databases.rabbitmq.pubsub.PubSubExchanges;
 import io.minestack.doublechest.databases.rabbitmq.pubsub.PubSubPublisher;
 import io.minestack.doublechest.model.server.Server;
 import org.bson.types.ObjectId;
@@ -21,6 +23,10 @@ import java.util.List;
 import java.util.logging.Level;
 
 public class Zombie extends JavaPlugin {
+
+    public Server getMinestackServer() {
+        return DoubleChest.INSTANCE.getMongoDatabase().getServerRepository().getModel(new ObjectId(System.getenv("server_id")));
+    }
 
     @Override
     public void onEnable() {
@@ -66,30 +72,32 @@ public class Zombie extends JavaPlugin {
         }
         DoubleChest.INSTANCE.initRabbitMQDatabase(addressList, System.getenv("rabbit_username"), System.getenv("rabbit_password"));
 
-        if (DoubleChest.INSTANCE.getMongoDatabase().getServerRepository().getModel(new ObjectId(System.getenv("server_id"))) == null) {
+        if (getMinestackServer() == null) {
             getLogger().severe("Could not find server data");
             getServer().shutdown();
             return;
         }
 
         getServer().getScheduler().runTaskTimerAsynchronously(this, () -> {
-
-            Server server = DoubleChest.INSTANCE.getMongoDatabase().getServerRepository().getModel(new ObjectId(System.getenv("server_id")));
+            Server server = getMinestackServer();
             if (server == null) {
                 getLogger().severe("Couldn't find server data stopping server");
                 getServer().shutdown();
                 return;
             }
+
             if (server.getNetwork() == null) {
                 getLogger().severe("Couldn't find network data stopping server");
                 getServer().shutdown();
                 return;
             }
+
             if (server.getNode() == null) {
                 getLogger().severe("Couldn't find node data stopping server");
                 getServer().shutdown();
                 return;
             }
+
             if (server.getServerType() == null) {
                 getLogger().severe("Couldn't find type data stopping server");
                 getServer().shutdown();
@@ -98,8 +106,9 @@ public class Zombie extends JavaPlugin {
 
             boolean newServer = false;
 
-            if (server.getPort() == -1) {
-                DockerClient dockerClient = DockerClientBuilder.getInstance("http://" + server.getNode().getPrivateAddress() + ":4243").build();
+            if (server.getPort() == 0) {
+                DockerClient dockerClient = DockerClientBuilder.getInstance("http://" + server.getNode().getPrivateAddress() + ":4243")
+                        .withDockerCmdExecFactory(new DockerCmdExecFactoryImpl()).build();
                 InspectContainerResponse inspectContainerResponse = dockerClient.inspectContainerCmd(server.getContainerId()).exec();
                 for (ExposedPort exposedPort : inspectContainerResponse.getNetworkSettings().getPorts().getBindings().keySet()) {
                     if (exposedPort.getPort() == 25565) {
@@ -111,39 +120,42 @@ public class Zombie extends JavaPlugin {
                 }
             }
 
+            server.setPlayers(getServer().getOnlinePlayers().size());
+            server.setUpdated_at(new Date(System.currentTimeMillis()));
+            DoubleChest.INSTANCE.getMongoDatabase().getServerRepository().saveModel(server);
+
             if (newServer == true) {
                 try {
-                    PubSubPublisher pubSubPublisher = new PubSubPublisher(DoubleChest.INSTANCE.getRabbitMQDatabase(), "serverStart");
+                    PubSubPublisher pubSubPublisher = new PubSubPublisher(DoubleChest.INSTANCE.getRabbitMQDatabase(), PubSubExchanges.SERVER_START.name());
 
                     JSONObject jsonObject = new JSONObject();
                     jsonObject.put("server", server.getId().toString());
 
                     pubSubPublisher.publish(jsonObject);
+                    pubSubPublisher.close();
                 } catch (IOException e) {
                     getLogger().log(Level.SEVERE, "Threw a IOException in Zombie::onEnable::asyncTask, full stack trace follows: ", e);
                 }
             }
-
-            server.setUpdated_at(new Date(System.currentTimeMillis()));
-            DoubleChest.INSTANCE.getMongoDatabase().getServerRepository().saveModel(server);
-
         }, 200L, 200L);
     }
 
     @Override
     public void onDisable() {
         getServer().getScheduler().cancelTasks(this);
-        Server server = DoubleChest.INSTANCE.getMongoDatabase().getServerRepository().getModel(new ObjectId(System.getenv("server_id")));
-        server.setUpdated_at(new Date(0));
-        DoubleChest.INSTANCE.getMongoDatabase().getServerRepository().saveModel(server);
-
+        Server server = getMinestackServer();
+        if (server != null) {
+            server.setUpdated_at(new Date(0));
+            DoubleChest.INSTANCE.getMongoDatabase().getServerRepository().saveModel(server);
+        }
         try {
-            PubSubPublisher pubSubPublisher = new PubSubPublisher(DoubleChest.INSTANCE.getRabbitMQDatabase(), "serverStop");
+            PubSubPublisher pubSubPublisher = new PubSubPublisher(DoubleChest.INSTANCE.getRabbitMQDatabase(), PubSubExchanges.SERVER_STOP.name());
 
             JSONObject jsonObject = new JSONObject();
-            jsonObject.put("server", server.getId().toString());
+            jsonObject.put("server", System.getenv("server_id"));
 
             pubSubPublisher.publish(jsonObject);
+            pubSubPublisher.close();
         } catch (IOException e) {
             getLogger().log(Level.SEVERE, "Threw a IOException in Zombie::onDisable, full stack trace follows: ", e);
         }

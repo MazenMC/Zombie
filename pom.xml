@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>Zombie</groupId>
-    <artifactId>io.minestack</artifactId>
+    <groupId>io.minestack</groupId>
+    <artifactId>Zombie</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 
     <build>
@@ -55,7 +55,7 @@
                                     <include>com.fasterxml.jackson.jaxrs:*</include>
                                     <include>com.fasterxml.jackson.module:jackson-module-jaxb-annotations:*</include>
                                     <include>com.github.jnr:*</include>
-                                    <include>com.google.guava:guava:*</include>
+                                    <!--<include>com.google.guava:guava:*</include>-->
                                     <include>commons-codec:commons-codec:*</include>
                                     <include>commons-io:commons-io:*</include>
                                     <include>commons-lang:commons-lang:*</include>
@@ -74,6 +74,16 @@
                                     <include>io.minestack:DoubleChest:*</include>
                                 </includes>
                             </artifactSet>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
                         </configuration>
                     </execution>
                 </executions>
