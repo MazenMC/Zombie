@@ -7,6 +7,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.Date;
 
@@ -21,6 +22,17 @@ public class PlayerListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onJoin(PlayerJoinEvent event) {
+        Server server = plugin.getMinestackServer();
+        if (server == null) {
+            return;
+        }
+        server.setPlayers(plugin.getServer().getOnlinePlayers().size());
+        server.setUpdated_at(new Date(System.currentTimeMillis()));
+        DoubleChest.INSTANCE.getMongoDatabase().getServerRepository().saveModel(server);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onQuit(PlayerQuitEvent event) {
         Server server = plugin.getMinestackServer();
         if (server == null) {
             return;
