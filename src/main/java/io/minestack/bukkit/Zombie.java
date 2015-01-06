@@ -7,6 +7,7 @@ import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.jaxrs.DockerCmdExecFactoryImpl;
 import com.mongodb.ServerAddress;
 import com.rabbitmq.client.Address;
+import io.minestack.bukkit.listeners.PlayerListener;
 import io.minestack.doublechest.DoubleChest;
 import io.minestack.doublechest.databases.rabbitmq.pubsub.PubSubExchanges;
 import io.minestack.doublechest.databases.rabbitmq.pubsub.PubSubPublisher;
@@ -77,6 +78,8 @@ public class Zombie extends JavaPlugin {
             getServer().shutdown();
             return;
         }
+
+        new PlayerListener(this);
 
         getServer().getScheduler().runTaskTimerAsynchronously(this, () -> {
             Server server = getMinestackServer();
