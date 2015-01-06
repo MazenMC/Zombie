@@ -22,17 +22,15 @@ public class PlayerListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onJoin(PlayerJoinEvent event) {
-        Server server = plugin.getMinestackServer();
-        if (server == null) {
-            return;
-        }
-        server.setPlayers(plugin.getServer().getOnlinePlayers().size());
-        server.setUpdated_at(new Date(System.currentTimeMillis()));
-        DoubleChest.INSTANCE.getMongoDatabase().getServerRepository().saveModel(server);
+        updatePlayerCount();
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(PlayerQuitEvent event) {
+        updatePlayerCount();
+    }
+
+    public void updatePlayerCount() {
         Server server = plugin.getMinestackServer();
         if (server == null) {
             return;
