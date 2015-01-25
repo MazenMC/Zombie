@@ -22,16 +22,24 @@ public class PlayerListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onJoin(PlayerJoinEvent event) {
-        updatePlayerCount();
+        Server server = plugin.getMinestackServer();
+        updatePlayerCount(plugin.getMinestackServer());
+        if (server != null) {
+            server.getPlayerNames().add(event.getPlayer().getName());
+        }
+
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(PlayerQuitEvent event) {
-        updatePlayerCount();
+        Server server = plugin.getMinestackServer();
+        updatePlayerCount(server);
+        if (server != null) {
+            server.getPlayerNames().remove(event.getPlayer().getName());
+        }
     }
 
-    public void updatePlayerCount() {
-        Server server = plugin.getMinestackServer();
+    public void updatePlayerCount(Server server) {
         if (server == null) {
             return;
         }

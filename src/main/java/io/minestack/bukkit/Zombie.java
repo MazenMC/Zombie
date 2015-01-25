@@ -13,6 +13,7 @@ import io.minestack.doublechest.databases.rabbitmq.pubsub.PubSubExchanges;
 import io.minestack.doublechest.databases.rabbitmq.pubsub.PubSubPublisher;
 import io.minestack.doublechest.model.server.Server;
 import org.bson.types.ObjectId;
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.json.JSONObject;
 
@@ -20,6 +21,7 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 
@@ -124,6 +126,14 @@ public class Zombie extends JavaPlugin {
             }
 
             server.setPlayers(getServer().getOnlinePlayers().size());
+
+            Iterator<String> playerNames = server.getPlayerNames().iterator();
+            while (playerNames.hasNext()) {
+                if (Bukkit.getPlayer(playerNames.next()) == null) {
+                    playerNames.remove();
+                }
+            }
+
             server.setUpdated_at(new Date(System.currentTimeMillis()));
             DoubleChest.INSTANCE.getMongoDatabase().getServerRepository().saveModel(server);
 
