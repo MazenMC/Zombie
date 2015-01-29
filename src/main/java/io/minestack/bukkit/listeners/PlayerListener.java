@@ -26,7 +26,7 @@ public class PlayerListener implements Listener {
         if (server != null) {
             server.getPlayerNames().add(event.getPlayer().getName());
         }
-        updatePlayerCount(plugin.getMinestackServer());
+        updatePlayerCount(server);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
