@@ -19,10 +19,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Level;
 
 public class Zombie extends JavaPlugin {
@@ -125,9 +122,7 @@ public class Zombie extends JavaPlugin {
                 }
             }
 
-            server.setPlayers(getServer().getOnlinePlayers().size());
-
-            Iterator<String> playerNames = server.getPlayerNames().iterator();
+            Iterator<UUID> playerNames = server.getPlayers().values().iterator();
             while (playerNames.hasNext()) {
                 if (Bukkit.getPlayer(playerNames.next()) == null) {
                     playerNames.remove();

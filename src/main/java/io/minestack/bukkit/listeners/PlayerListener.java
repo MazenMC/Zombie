@@ -24,7 +24,7 @@ public class PlayerListener implements Listener {
     public void onJoin(PlayerJoinEvent event) {
         Server server = plugin.getMinestackServer();
         if (server != null) {
-            server.getPlayerNames().add(event.getPlayer().getName());
+            server.getPlayers().put(event.getPlayer().getName(), event.getPlayer().getUniqueId());
         }
         updatePlayerCount(server);
     }
@@ -33,7 +33,7 @@ public class PlayerListener implements Listener {
     public void onQuit(PlayerQuitEvent event) {
         Server server = plugin.getMinestackServer();
         if (server != null) {
-            server.getPlayerNames().remove(event.getPlayer().getName());
+            server.getPlayers().remove(event.getPlayer().getName());
         }
         updatePlayerCount(server);
     }
@@ -42,7 +42,6 @@ public class PlayerListener implements Listener {
         if (server == null) {
             return;
         }
-        server.setPlayers(plugin.getServer().getOnlinePlayers().size());
         server.setUpdated_at(new Date(System.currentTimeMillis()));
         DoubleChest.INSTANCE.getMongoDatabase().getServerRepository().saveModel(server);
     }
