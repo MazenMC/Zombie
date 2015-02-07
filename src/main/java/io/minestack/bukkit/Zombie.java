@@ -129,7 +129,7 @@ public class Zombie extends JavaPlugin {
                 }
             }
 
-            server.setUpdated_at(new Date(System.currentTimeMillis()));
+            server.setUpdated_at(new Date(System.currentTimeMillis()+30000));
             DoubleChest.INSTANCE.getMongoDatabase().getServerRepository().saveModel(server);
 
             if (newServer == true) {
