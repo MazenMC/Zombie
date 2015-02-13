@@ -81,6 +81,7 @@ public class Zombie extends JavaPlugin {
         new PlayerListener(this);
 
         getServer().getScheduler().runTaskTimerAsynchronously(this, () -> {
+            long start = System.currentTimeMillis();
             Server server = getMinestackServer();
             if (server == null) {
                 getLogger().severe("Couldn't find server data stopping server");
@@ -145,6 +146,8 @@ public class Zombie extends JavaPlugin {
                     getLogger().log(Level.SEVERE, "Threw a IOException in Zombie::onEnable::asyncTask, full stack trace follows: ", e);
                 }
             }
+            long end = System.currentTimeMillis();
+            getLogger().info("Minestack Update Time "+(end-start));
         }, 200L, 200L);
     }
 
