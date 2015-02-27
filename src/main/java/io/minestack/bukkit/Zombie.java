@@ -147,7 +147,6 @@ public class Zombie extends JavaPlugin {
                 }
             }
             long end = System.currentTimeMillis();
-            getLogger().info("Minestack Update Time "+(end-start));
         }, 200L, 200L);
     }
 
